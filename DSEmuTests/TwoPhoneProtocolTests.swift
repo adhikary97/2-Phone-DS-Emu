@@ -196,26 +196,21 @@ final class TwoPhoneProtocolTests: XCTestCase {
         XCTAssertTrue(configuration.scriptedInputs)
     }
 
-    func testIconLaunchUsesRememberedRoleAndROM() {
-        let defaults = UserDefaults.standard
-        let roleKey = "twoPhone.selectedRole"
-        let romKey = "twoPhone.selectedROMName"
-        let previousRole = defaults.string(forKey: roleKey)
-        let previousROM = defaults.string(forKey: romKey)
-        defer {
-            defaults.set(previousRole, forKey: roleKey)
-            defaults.set(previousROM, forKey: romKey)
-        }
+    func testIconLaunchShowsHomeWhileRememberingPreviousRoleAndROM() {
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let preferences = TwoPhonePreferences(defaults: defaults)
+        preferences.save(role: .display, romName: "TestROM.nds")
 
-        defaults.set(TwoPhoneRole.display.rawValue, forKey: roleKey)
-        defaults.set("TestROM.nds", forKey: romKey)
-
-        let configuration = TwoPhoneConfiguration(arguments: ["TwoPhoneDS"])
+        let configuration = TwoPhoneConfiguration(
+            arguments: ["TwoPhoneDS"],
+            preferences: preferences
+        )
 
         XCTAssertEqual(configuration.role, .display)
         XCTAssertEqual(configuration.autoloadROMName, "TestROM.nds")
         XCTAssertTrue(configuration.usesAutomaticDiscovery)
-        XCTAssertFalse(configuration.requiresOnDeviceSetup)
+        XCTAssertTrue(configuration.requiresOnDeviceSetup)
     }
 
     func testLaunchArgumentsStillOverrideRememberedSetup() {

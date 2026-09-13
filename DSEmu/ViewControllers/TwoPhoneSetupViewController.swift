@@ -2,8 +2,8 @@ import UIKit
 
 final class TwoPhoneSetupViewController: UIViewController {
     private enum Palette {
-        static let graphite = UIColor(red: 0.071, green: 0.078, blue: 0.090, alpha: 1)
-        static let warmPanel = UIColor(red: 0.925, green: 0.914, blue: 0.882, alpha: 1)
+        static let graphite = UIColor(red: 0.090, green: 0.098, blue: 0.118, alpha: 1)
+        static let coolPanel = UIColor(red: 0.145, green: 0.161, blue: 0.192, alpha: 1)
         static let mutedText = UIColor(red: 0.65, green: 0.67, blue: 0.70, alpha: 1)
         static let controllerBlue = UIColor(red: 0.290, green: 0.490, blue: 1.0, alpha: 1)
         static let displayRed = UIColor(red: 0.906, green: 0.357, blue: 0.333, alpha: 1)
@@ -59,11 +59,11 @@ final class TwoPhoneSetupViewController: UIViewController {
             content.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -24),
         ])
 
-        let brand = makeLabel("▯  ▯   TWO-PHONE DS", size: 12, weight: .bold, color: Palette.successGreen)
+        let brand = makeLabel("TwoPhone DS", size: 13, weight: .bold, color: Palette.successGreen)
         brand.accessibilityLabel = "Two-Phone DS"
         content.addArrangedSubview(brand)
 
-        let title = makeLabel("Set up this phone", size: 34, weight: .bold, color: .white)
+        let title = makeLabel("Choose how to play", size: 34, weight: .bold, color: .white)
         title.adjustsFontSizeToFitWidth = true
         title.minimumScaleFactor = 0.8
         content.addArrangedSubview(title)
@@ -78,16 +78,16 @@ final class TwoPhoneSetupViewController: UIViewController {
         content.addArrangedSubview(subtitle)
         content.setCustomSpacing(28, after: subtitle)
 
-        let gameHeading = makeLabel("GAME", size: 12, weight: .bold, color: Palette.mutedText)
+        let gameHeading = makeLabel("Game", size: 13, weight: .semibold, color: Palette.mutedText)
         content.addArrangedSubview(gameHeading)
 
         romButton.accessibilityIdentifier = "twoPhone.romPicker"
-        romButton.addTarget(self, action: #selector(chooseROM), for: .touchUpInside)
+        romButton.showsMenuAsPrimaryAction = true
         romButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 68).isActive = true
         content.addArrangedSubview(romButton)
         content.setCustomSpacing(28, after: romButton)
 
-        let roleHeading = makeLabel("THIS PHONE WILL BE THE…", size: 12, weight: .bold, color: Palette.mutedText)
+        let roleHeading = makeLabel("This phone", size: 13, weight: .semibold, color: Palette.mutedText)
         content.addArrangedSubview(roleHeading)
 
         configureRoleButton(
@@ -135,7 +135,12 @@ final class TwoPhoneSetupViewController: UIViewController {
     ) -> UILabel {
         let label = UILabel()
         label.text = text
-        label.font = .systemFont(ofSize: size, weight: weight)
+        let baseFont = UIFont.systemFont(ofSize: size, weight: weight)
+        if let descriptor = baseFont.fontDescriptor.withDesign(.rounded) {
+            label.font = UIFont(descriptor: descriptor, size: size)
+        } else {
+            label.font = baseFont
+        }
         label.textColor = color
         return label
     }
@@ -179,23 +184,22 @@ final class TwoPhoneSetupViewController: UIViewController {
     private func updateROMSelection() {
         var configuration = UIButton.Configuration.filled()
         configuration.cornerStyle = .large
-        configuration.baseBackgroundColor = Palette.warmPanel
-        configuration.baseForegroundColor = Palette.graphite
+        configuration.baseBackgroundColor = Palette.coolPanel
+        configuration.baseForegroundColor = .white
         configuration.imagePlacement = .leading
         configuration.imagePadding = 14
         configuration.titleAlignment = .leading
 
         if let selectedROMURL {
             configuration.title = selectedROMURL.deletingPathExtension().lastPathComponent
-            configuration.subtitle = "Selected — tap to choose a different ROM"
+            configuration.subtitle = "Selected — tap to choose another game"
             configuration.image = UIImage(systemName: "checkmark.circle.fill")
-            configuration.baseForegroundColor = Palette.graphite
             romButton.accessibilityLabel = "Selected ROM, \(selectedROMURL.lastPathComponent). Tap to change."
         } else {
-            configuration.title = "Choose a Nintendo DS ROM"
-            configuration.subtitle = "Select the same .nds file on both phones"
+            configuration.title = "Choose a game"
+            configuration.subtitle = "Pick a saved game or import an .nds file"
             configuration.image = UIImage(systemName: "doc.badge.plus")
-            romButton.accessibilityLabel = "Choose a Nintendo DS ROM"
+            romButton.accessibilityLabel = "Choose a game"
         }
 
         configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
@@ -209,12 +213,57 @@ final class TwoPhoneSetupViewController: UIViewController {
             return updated
         }
         romButton.configuration = configuration
+        romButton.menu = makeGameMenu()
 
         let hasROM = selectedROMURL != nil
         controllerButton.isEnabled = hasROM
         displayButton.isEnabled = hasROM
         controllerButton.alpha = hasROM ? 1 : 0.42
         displayButton.alpha = hasROM ? 1 : 0.42
+    }
+
+    private func makeGameMenu() -> UIMenu {
+        let selectedPath = selectedROMURL?.standardizedFileURL.path
+        let gameActions = availableROMURLs().map { url in
+            UIAction(
+                title: url.deletingPathExtension().lastPathComponent,
+                image: UIImage(systemName: "gamecontroller.fill"),
+                state: url.standardizedFileURL.path == selectedPath ? .on : .off
+            ) { [weak self] _ in
+                self?.selectedROMURL = url
+                self?.updateROMSelection()
+            }
+        }
+
+        let importAction = UIAction(
+            title: "Import another game",
+            image: UIImage(systemName: "square.and.arrow.down")
+        ) { [weak self] _ in
+            self?.chooseROM()
+        }
+
+        guard !gameActions.isEmpty else {
+            return UIMenu(children: [importAction])
+        }
+        return UIMenu(children: [
+            UIMenu(title: "Saved games", options: .displayInline, children: gameActions),
+            importAction,
+        ])
+    }
+
+    private func availableROMURLs() -> [URL] {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return (try? FileManager.default.contentsOfDirectory(
+            at: documents,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ))?
+        .filter { $0.pathExtension.lowercased() == "nds" }
+        .sorted {
+            $0.deletingPathExtension().lastPathComponent.localizedStandardCompare(
+                $1.deletingPathExtension().lastPathComponent
+            ) == .orderedAscending
+        } ?? []
     }
 
     @objc private func chooseROM() {

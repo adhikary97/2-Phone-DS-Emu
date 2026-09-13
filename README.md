@@ -70,25 +70,42 @@ products, and generated artifacts are excluded from source control.
 After the signed app has been installed on both phones, normal play does not
 need a Mac, Terminal commands, a cable, or an IP address:
 
-1. Keep Wi-Fi enabled on both phones and open **TwoPhone DS** on each one.
-2. On each phone, choose the same `.nds` ROM. A ROM already stored in the app is
-   selected automatically.
+1. Keep Wi-Fi enabled on both phones and open **TwoPhone DS** on each one. Every
+   ordinary launch starts on the Home screen.
+2. On each phone, open **Game** and choose the same saved title, or select
+   **Import another game** to add an `.nds` file. The previous game remains
+   selected as a convenient default.
 3. Tap **Controller** on the phone that will show the bottom screen and controls.
 4. Tap **Top Display** on the other phone.
 5. Tap **Allow** if iOS asks for Local Network access.
 
-The role and ROM are remembered. On later sessions, just open the app on both
-phones; either phone may be opened first, and they will wait for and discover
-each other automatically. The status bar reports searching, connecting, ROM
-validation, snapshot transfer, and lockstep play.
+The role and ROM are remembered as Home-screen defaults, but they can be changed
+before every session. After choosing each phone's role, either phone may start
+first; they wait for and discover each other automatically. The status bar
+reports searching, connecting, ROM validation, snapshot transfer, and lockstep
+play.
+
+The controller uses an original graphite handheld skin. In landscape, the
+touch screen takes the largest 4:3 frame available in a protected center lane.
+The left wing holds L, the D-pad, and Select; the right wing holds R, the face
+buttons, and Start. This keeps every control outside gameplay and leaves no
+menu-button strip beneath the screen. The top display likewise uses the largest
+centered 4:3 frame its safe area allows, so neither DS screen is stretched. Its
+graphite upper-lid treatment adds a thin screen frame and subtle speaker grilles
+in the otherwise-unused landscape margins without reducing the game image. The
+controls use DS-inspired hardware silhouettes: a connected cross-shaped D-pad,
+raised circular ABXY caps, slim Select/Start pills, and broad shoulder rails.
+Shoulders, primary controls, and menu buttons occupy separate top, middle, and
+bottom zones, leaving generous gaps that reduce accidental presses. These
+controls sit directly on one continuous graphite shell instead of inside
+separate rounded wing panels.
 
 If either phone leaves the app, the live synchronization connection is closed
 before iOS suspends it. Returning to the app automatically restarts discovery;
 the controller sends a fresh snapshot of its current game state and lockstep
 play resumes without setup or Mac commands.
 
-To change a phone's role or ROM, tap **Setup** in the status bar, choose **Reset
-Setup**, then force-quit and reopen the app.
+To change a phone's role or ROM, reopen the app and choose again from Home.
 
 The launch-argument interface remains available for repeatable simulator and
 diagnostic runs, but it is no longer required for ordinary phone use.

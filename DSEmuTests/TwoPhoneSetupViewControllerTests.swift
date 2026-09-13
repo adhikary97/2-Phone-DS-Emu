@@ -11,6 +11,20 @@ final class TwoPhoneSetupViewControllerTests: XCTestCase {
         XCTAssertNotNil(viewController.view.viewWithAccessibilityIdentifier("twoPhone.controllerRole"))
         XCTAssertNotNil(viewController.view.viewWithAccessibilityIdentifier("twoPhone.displayRole"))
     }
+
+    func testGamePickerOffersSavedGamesMenuAndImportAction() throws {
+        let viewController = TwoPhoneSetupViewController(onComplete: { _ in })
+        viewController.loadViewIfNeeded()
+
+        let gameButton = try XCTUnwrap(
+            viewController.view.viewWithAccessibilityIdentifier("twoPhone.romPicker") as? UIButton
+        )
+
+        XCTAssertTrue(gameButton.showsMenuAsPrimaryAction)
+        XCTAssertTrue(gameButton.menu?.children.contains(where: {
+            ($0 as? UIAction)?.title == "Import another game"
+        }) == true)
+    }
 }
 
 private extension UIView {

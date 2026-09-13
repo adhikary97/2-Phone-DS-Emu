@@ -2,7 +2,14 @@ import UIKit
 
 class BottomScreenViewController: UIViewController {
 
+    private enum Palette {
+        static let shell = UIColor(red: 0.090, green: 0.098, blue: 0.118, alpha: 1)
+        static let bezel = UIColor(red: 0.027, green: 0.031, blue: 0.039, alpha: 1)
+        static let bezelEdge = UIColor.white.withAlphaComponent(0.12)
+    }
+
     let screenView = DSScreenView()
+    private let screenBezel = UIView()
     private var hasROMLoaded = false
     private var didAttemptAutoload = false
 
@@ -19,11 +26,34 @@ class BottomScreenViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .black
+        view.backgroundColor = Palette.shell
+
+        screenBezel.translatesAutoresizingMaskIntoConstraints = false
+        screenBezel.backgroundColor = Palette.bezel
+        screenBezel.layer.cornerRadius = 20
+        screenBezel.layer.cornerCurve = .continuous
+        screenBezel.layer.borderWidth = 1
+        screenBezel.layer.borderColor = Palette.bezelEdge.cgColor
+        screenBezel.layer.shadowColor = UIColor.black.cgColor
+        screenBezel.layer.shadowOpacity = 0.45
+        screenBezel.layer.shadowRadius = 16
+        screenBezel.layer.shadowOffset = CGSize(width: 0, height: 8)
+        screenBezel.isHidden = true
+        view.addSubview(screenBezel)
 
         screenView.translatesAutoresizingMaskIntoConstraints = false
-        screenView.isHidden = true
-        view.addSubview(screenView)
+        screenView.layer.cornerRadius = 7
+        screenView.layer.cornerCurve = .continuous
+        screenView.layer.masksToBounds = true
+        screenBezel.addSubview(screenView)
+
+        NSLayoutConstraint.activate([
+            screenView.topAnchor.constraint(equalTo: screenBezel.topAnchor, constant: 8),
+            screenView.leadingAnchor.constraint(equalTo: screenBezel.leadingAnchor, constant: 8),
+            screenView.trailingAnchor.constraint(equalTo: screenBezel.trailingAnchor, constant: -8),
+            screenView.bottomAnchor.constraint(equalTo: screenBezel.bottomAnchor, constant: -8),
+            screenView.widthAnchor.constraint(equalTo: screenView.heightAnchor, multiplier: 256.0 / 192.0),
+        ])
 
         EmulatorCore.shared.phoneRenderer = screenView.renderer
 
@@ -59,25 +89,54 @@ class BottomScreenViewController: UIViewController {
     private func buildLayoutConstraints() {
         guard let controls = onScreenControls else { return }
 
-        // Portrait: screen on top, controls on bottom
+        // Portrait: the touch screen sits in a recessed bezel above a separate
+        // control deck.
         portraitConstraints = [
-            screenView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            screenView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            screenView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            screenView.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 192.0/256.0),
+            screenBezel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 56),
+            screenBezel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
+            screenBezel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
 
             controls.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             controls.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            controls.topAnchor.constraint(equalTo: screenBezel.bottomAnchor, constant: 10),
             controls.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            controls.heightAnchor.constraint(equalToConstant: 200),
         ]
 
-        // Landscape: controls on left+right, screen in center
+        let preferredLandscapeWidth = screenBezel.widthAnchor.constraint(
+            equalTo: view.safeAreaLayoutGuide.widthAnchor,
+            constant: -300
+        )
+        preferredLandscapeWidth.priority = .defaultHigh
+        let preferredLandscapeHeight = screenBezel.heightAnchor.constraint(
+            equalTo: view.safeAreaLayoutGuide.heightAnchor,
+            constant: -62
+        )
+        preferredLandscapeHeight.priority = UILayoutPriority(749)
+
+        // Landscape: the screen scales inside a protected center lane. The
+        // 150-point side lanes belong exclusively to the control wings. With
+        // Select and Start in those wings, the center can reclaim its bottom.
         landscapeConstraints = [
-            screenView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            screenView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            screenView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.95),
-            screenView.widthAnchor.constraint(equalTo: screenView.heightAnchor, multiplier: 256.0/192.0),
+            screenBezel.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            screenBezel.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor, constant: 21),
+            screenBezel.leadingAnchor.constraint(
+                greaterThanOrEqualTo: view.safeAreaLayoutGuide.leadingAnchor,
+                constant: 150
+            ),
+            screenBezel.trailingAnchor.constraint(
+                lessThanOrEqualTo: view.safeAreaLayoutGuide.trailingAnchor,
+                constant: -150
+            ),
+            screenBezel.topAnchor.constraint(
+                greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: 52
+            ),
+            screenBezel.bottomAnchor.constraint(
+                lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor,
+                constant: -10
+            ),
+            preferredLandscapeWidth,
+            preferredLandscapeHeight,
 
             controls.topAnchor.constraint(equalTo: view.topAnchor),
             controls.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -212,7 +271,7 @@ class BottomScreenViewController: UIViewController {
             self.loadROMContainer.alpha = 0
         } completion: { _ in
             self.loadROMContainer.isHidden = true
-            self.screenView.isHidden = false
+            self.screenBezel.isHidden = false
             self.onScreenControls?.isHidden = false
             self.applyLayoutForCurrentOrientation()
         }

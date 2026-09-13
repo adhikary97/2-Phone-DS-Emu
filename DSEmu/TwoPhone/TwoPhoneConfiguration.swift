@@ -51,7 +51,10 @@ struct TwoPhoneConfiguration {
             max(1, Self.value(for: "--two-phone-frame-window", in: arguments).flatMap(Int.init) ?? 4)
         )
         scriptedInputs = arguments.contains("--two-phone-scripted-inputs")
-        requiresOnDeviceSetup = roleArgument == nil && !preferences.hasCompletedSetup
+        // Ordinary icon launches always begin at the home screen so the player
+        // can choose a game and role. Explicit launch arguments still bypass
+        // the home screen for automated proof runs and diagnostics.
+        requiresOnDeviceSetup = roleArgument == nil
         usesAutomaticDiscovery = roleArgument == nil && preferences.hasCompletedSetup
     }
 
