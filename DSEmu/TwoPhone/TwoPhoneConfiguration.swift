@@ -26,6 +26,7 @@ struct TwoPhoneConfiguration {
     let autoloadROMName: String?
     let testFrameLimit: UInt64?
     let checkpointInterval: UInt64
+    let frameWindow: Int
     let scriptedInputs: Bool
     let requiresOnDeviceSetup: Bool
     let usesAutomaticDiscovery: Bool
@@ -44,6 +45,10 @@ struct TwoPhoneConfiguration {
         checkpointInterval = max(
             1,
             Self.value(for: "--two-phone-checkpoint-interval", in: arguments).flatMap(UInt64.init) ?? 60
+        )
+        frameWindow = min(
+            8,
+            max(1, Self.value(for: "--two-phone-frame-window", in: arguments).flatMap(Int.init) ?? 4)
         )
         scriptedInputs = arguments.contains("--two-phone-scripted-inputs")
         requiresOnDeviceSetup = roleArgument == nil && !preferences.hasCompletedSetup

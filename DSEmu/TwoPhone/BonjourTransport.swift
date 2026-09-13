@@ -19,6 +19,7 @@ enum BonjourTransportError: Error, CustomStringConvertible {
 
 final class BonjourTransport: TwoPhoneMessageTransport {
     static let serviceType = "_twophonedsemu._tcp"
+    static let serviceName = "TwoPhone DS Controller"
 
     private let connection: NWConnection
     private let queue: DispatchQueue
@@ -32,12 +33,13 @@ final class BonjourTransport: TwoPhoneMessageTransport {
 
     static func acceptOne(
         timeout: TimeInterval = 120,
+        serviceName: String = BonjourTransport.serviceName,
         status: @escaping (String) -> Void
     ) throws -> BonjourTransport {
         let parameters = makeParameters()
         let listener = try NWListener(using: parameters)
         listener.service = NWListener.Service(
-            name: "TwoPhone DS Controller",
+            name: serviceName,
             type: serviceType,
             domain: nil,
             txtRecord: nil
@@ -95,6 +97,7 @@ final class BonjourTransport: TwoPhoneMessageTransport {
 
     static func connect(
         timeout: TimeInterval = 120,
+        serviceName: String? = nil,
         status: @escaping (String) -> Void
     ) throws -> BonjourTransport {
         let parameters = makeParameters()
@@ -121,7 +124,12 @@ final class BonjourTransport: TwoPhoneMessageTransport {
         }
 
         browser.browseResultsChangedHandler = { results, _ in
-            guard let endpoint = results.first?.endpoint else { return }
+            let endpoint = results.lazy.map(\.endpoint).first { endpoint in
+                guard let serviceName else { return true }
+                guard case .service(let name, _, _, _) = endpoint else { return false }
+                return name == serviceName
+            }
+            guard let endpoint else { return }
 
             connectionLock.lock()
             guard !isConnecting else {

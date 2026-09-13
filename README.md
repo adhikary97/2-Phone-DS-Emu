@@ -22,13 +22,19 @@ For every subsequent frame:
 
 1. The controller sends an absolute key/touch state tagged with a frame number.
 2. Both instances apply it before running that frame.
-3. The display acknowledges the completed frame.
-4. At configured checkpoints, both hash their complete savestate and both
+3. A dedicated controller-side receiver collects display acknowledgements while
+   the controller continues emulating at its 60 fps cadence.
+4. The controller may lead by at most four unacknowledged frames. If the window
+   fills, it waits for the oldest acknowledgement before advancing.
+5. At configured checkpoints, both hash their complete savestate and both
    framebuffers. Any difference fails the session.
 
-The lockstep acknowledgement is deliberately strict for the proof. A hardware
-version will likely use a small frame window to trade alignment for lower input
-latency.
+Checkpoint frames remain hard barriers: the controller drains the complete
+window and does not send another input until the display's digest matches. The
+default four-frame window can be overridden for diagnostics with
+`--two-phone-frame-window`; values are clamped to 1–8. Protocol v3 also reports
+the display's average and maximum per-frame emulation/render time at each
+checkpoint.
 
 ### Latest verified run
 
@@ -76,6 +82,11 @@ phones; either phone may be opened first, and they will wait for and discover
 each other automatically. The status bar reports searching, connecting, ROM
 validation, snapshot transfer, and lockstep play.
 
+If either phone leaves the app, the live synchronization connection is closed
+before iOS suspends it. Returning to the app automatically restarts discovery;
+the controller sends a fresh snapshot of its current game state and lockstep
+play resumes without setup or Mac commands.
+
 To change a phone's role or ROM, tap **Setup** in the status bar, choose **Reset
 Setup**, then force-quit and reopen the app.
 
@@ -85,7 +96,14 @@ diagnostic runs, but it is no longer required for ordinary phone use.
 ## Current boundary
 
 This validates deterministic dual emulation, shared snapshot loading, framed
-input transport, Bonjour discovery, persistent on-device setup, and
-role-specific rendering. The strict physical proof did not sustain 60 fps. It
-does **not** validate long-run determinism, background behavior, reconnection,
-or audio synchronization. Those remain the next hardware milestones.
+input transport, Bonjour discovery, persistent on-device setup, foreground
+reconnection, and role-specific rendering. Two physical leave-and-return
+cycles each recovered with one verified snapshot and no failed determinism
+checkpoint. Use an optimized Release build for physical play: the tested
+Release build sustained roughly 54–56 fps after reconnect, compared with about
+28–32 fps for an unoptimized Debug build. Physical tracing of the controller
+showed ample CPU headroom and negligible send-completion cost; most blocked
+time was in the display-acknowledgement receive. Protocol v3 moves those
+receives off the emulation thread and uses a bounded four-frame window while
+retaining hard checkpoint barriers. Longer determinism runs and audio
+synchronization remain the next hardware milestones.

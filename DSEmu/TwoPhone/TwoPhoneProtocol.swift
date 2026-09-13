@@ -32,15 +32,23 @@ struct EmulatorDigest: Equatable, Codable {
 struct FrameAcknowledgement: Equatable {
     let frame: UInt64
     let digest: EmulatorDigest?
+    let processingNanoseconds: UInt64
+
+    init(frame: UInt64, digest: EmulatorDigest?, processingNanoseconds: UInt64 = 0) {
+        self.frame = frame
+        self.digest = digest
+        self.processingNanoseconds = processingNanoseconds
+    }
 }
 
 enum TwoPhoneMessage: Equatable {
-    static let protocolVersion: UInt16 = 1
+    static let protocolVersion: UInt16 = 3
     static let maximumPayloadLength = 40 * 1024 * 1024
 
     case hello(version: UInt16, romSHA256: Data)
-    case snapshot(Data)
+    case snapshot(Data, stateHash: UInt64)
     case ready
+    case start
     case input(DSInputFrame)
     case acknowledgement(FrameAcknowledgement)
     case finish(frame: UInt64, success: Bool, detail: String)
@@ -55,6 +63,7 @@ enum TwoPhoneMessage: Equatable {
         case acknowledgement = 5
         case finish = 6
         case finishAcknowledgement = 7
+        case start = 8
         case failure = 255
     }
 
@@ -69,12 +78,16 @@ enum TwoPhoneMessage: Equatable {
             writer.append(version)
             writer.append(romSHA256)
 
-        case .snapshot(let state):
+        case .snapshot(let state, let stateHash):
             writer.append(MessageType.snapshot.rawValue)
+            writer.append(stateHash)
             writer.append(state)
 
         case .ready:
             writer.append(MessageType.ready.rawValue)
+
+        case .start:
+            writer.append(MessageType.start.rawValue)
 
         case .input(let input):
             writer.append(MessageType.input.rawValue)
@@ -87,6 +100,7 @@ enum TwoPhoneMessage: Equatable {
         case .acknowledgement(let acknowledgement):
             writer.append(MessageType.acknowledgement.rawValue)
             writer.append(acknowledgement.frame)
+            writer.append(acknowledgement.processingNanoseconds)
             writer.append(acknowledgement.digest == nil ? UInt8(0) : UInt8(1))
             if let digest = acknowledgement.digest {
                 writer.append(digest.state)
@@ -129,9 +143,12 @@ enum TwoPhoneMessage: Equatable {
         case .hello:
             message = .hello(version: try reader.readUInt16(), romSHA256: try reader.readData(count: 32))
         case .snapshot:
-            message = .snapshot(try reader.readRemainingData())
+            let stateHash = try reader.readUInt64()
+            message = .snapshot(try reader.readRemainingData(), stateHash: stateHash)
         case .ready:
             message = .ready
+        case .start:
+            message = .start
         case .input:
             let frame = try reader.readUInt64()
             let keyMask = try reader.readUInt16()
@@ -141,6 +158,7 @@ enum TwoPhoneMessage: Equatable {
             message = .input(DSInputFrame(frame: frame, keyMask: keyMask, touchX: x, touchY: y, touchActive: active))
         case .acknowledgement:
             let frame = try reader.readUInt64()
+            let processingNanoseconds = try reader.readUInt64()
             let hasDigest = try reader.readUInt8() != 0
             let digest = hasDigest ? EmulatorDigest(
                 frame: frame,
@@ -148,7 +166,11 @@ enum TwoPhoneMessage: Equatable {
                 top: try reader.readUInt64(),
                 bottom: try reader.readUInt64()
             ) : nil
-            message = .acknowledgement(FrameAcknowledgement(frame: frame, digest: digest))
+            message = .acknowledgement(FrameAcknowledgement(
+                frame: frame,
+                digest: digest,
+                processingNanoseconds: processingNanoseconds
+            ))
         case .finish:
             message = .finish(
                 frame: try reader.readUInt64(),

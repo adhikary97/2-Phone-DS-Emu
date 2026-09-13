@@ -19,6 +19,96 @@ enum EmulatorCoreError: Error, CustomStringConvertible {
     }
 }
 
+final class TwoPhoneReconnectLoop {
+    typealias Attempt = () throws -> Void
+    typealias FailureHandler = (Error) -> Void
+
+    private let condition = NSCondition()
+    private let retryDelay: TimeInterval
+    private var isForeground = true
+    private var isStopped = false
+
+    init(retryDelay: TimeInterval = 1) {
+        self.retryDelay = max(0, retryDelay)
+    }
+
+    func run(_ attempt: Attempt, onFailure: FailureHandler = { _ in }) {
+        while waitUntilForeground() {
+            do {
+                try attempt()
+            } catch {
+                if shouldContinue {
+                    onFailure(error)
+                }
+            }
+
+            guard waitBeforeRetry() else { return }
+        }
+    }
+
+    func didEnterBackground() {
+        condition.lock()
+        isForeground = false
+        condition.broadcast()
+        condition.unlock()
+    }
+
+    func willEnterForeground() {
+        condition.lock()
+        isForeground = true
+        condition.broadcast()
+        condition.unlock()
+    }
+
+    func stop() {
+        condition.lock()
+        isStopped = true
+        condition.broadcast()
+        condition.unlock()
+    }
+
+    private var shouldContinue: Bool {
+        condition.lock()
+        defer { condition.unlock() }
+        return !isStopped
+    }
+
+    private func waitUntilForeground() -> Bool {
+        condition.lock()
+        defer { condition.unlock() }
+        while !isStopped, !isForeground {
+            condition.wait()
+        }
+        return !isStopped
+    }
+
+    private func waitBeforeRetry() -> Bool {
+        condition.lock()
+        defer { condition.unlock() }
+
+        guard !isStopped else { return false }
+        if !isForeground {
+            while !isStopped, !isForeground {
+                condition.wait()
+            }
+            return !isStopped
+        }
+
+        guard retryDelay > 0 else { return true }
+        let deadline = Date(timeIntervalSinceNow: retryDelay)
+        while !isStopped, isForeground, Date() < deadline {
+            _ = condition.wait(until: deadline)
+        }
+
+        guard !isStopped else { return false }
+        while !isForeground {
+            condition.wait()
+            if isStopped { return false }
+        }
+        return true
+    }
+}
+
 final class EmulatorCore {
     static let shared = EmulatorCore()
 
@@ -27,6 +117,10 @@ final class EmulatorCore {
     private var stopRequested = false
     private var backgrounded = false
     private var loadedROMHash = Data()
+    private let twoPhoneReconnectLoop = TwoPhoneReconnectLoop()
+    private let twoPhoneSessionLock = NSLock()
+    private var activeTwoPhoneSession: TwoPhoneSession?
+    private let emulatorLock = NSLock()
 
     private let inputLock = NSLock()
     private var pendingKeyMask: UInt16 = 0x0FFF
@@ -54,15 +148,25 @@ final class EmulatorCore {
     @objc private func appDidEnterBackground() {
         guard isRunning else { return }
         backgrounded = true
-        melonds_pause()
+        if TwoPhoneConfiguration.current.isTwoPhoneSession {
+            twoPhoneReconnectLoop.didEnterBackground()
+        }
+        pauseEmulation()
+        if TwoPhoneConfiguration.current.isTwoPhoneSession {
+            cancelActiveTwoPhoneSession()
+            publishStatus("Paused — return to the app to resync")
+        }
         AudioManager.shared.stop()
     }
 
     @objc private func appWillEnterForeground() {
         guard backgrounded else { return }
         backgrounded = false
-        melonds_resume()
-        if !TwoPhoneConfiguration.current.isTwoPhoneSession {
+        if TwoPhoneConfiguration.current.isTwoPhoneSession {
+            publishStatus("Back in the app — resynchronizing")
+            twoPhoneReconnectLoop.willEnterForeground()
+        } else {
+            resumeEmulation()
             AudioManager.shared.start()
         }
     }
@@ -104,12 +208,12 @@ final class EmulatorCore {
     }
 
     func pause() {
-        melonds_pause()
+        pauseEmulation()
         isRunning = false
     }
 
     func resume() {
-        melonds_resume()
+        resumeEmulation()
         isRunning = true
     }
 
@@ -182,6 +286,56 @@ final class EmulatorCore {
 
     private func runTwoPhoneSession(configuration: TwoPhoneConfiguration) {
         let startedAt = Date()
+        if !configuration.isAutomatedProof {
+            twoPhoneReconnectLoop.run({ [unowned self] in
+                _ = try runTwoPhoneSessionAttempt(configuration: configuration)
+            }, onFailure: { [weak self] _ in
+                guard let self else { return }
+                if backgrounded {
+                    publishStatus("Paused — return to the app to resync")
+                } else {
+                    publishStatus("Connection lost — reconnecting automatically")
+                }
+            })
+            isRunning = false
+            return
+        }
+
+        let outcome: TwoPhoneSessionOutcome
+        do {
+            outcome = try runTwoPhoneSessionAttempt(configuration: configuration)
+        } catch {
+            publishStatus("Session failed: \(error)")
+            outcome = TwoPhoneSessionOutcome(
+                success: false,
+                framesCompleted: 0,
+                finalDigest: nil,
+                checkpointsCompared: 0,
+                snapshotBytes: 0,
+                detail: String(describing: error)
+            )
+        }
+
+        let elapsed = Date().timeIntervalSince(startedAt)
+        let report = TwoPhoneTestReport(
+            role: configuration.role,
+            success: outcome.success,
+            framesCompleted: outcome.framesCompleted,
+            elapsedSeconds: elapsed,
+            framesPerSecond: elapsed > 0 ? Double(outcome.framesCompleted) / elapsed : 0,
+            romSHA256: loadedROMHash.map { String(format: "%02x", $0) }.joined(),
+            finalDigest: outcome.finalDigest,
+            checkpointsCompared: outcome.checkpointsCompared,
+            snapshotBytes: outcome.snapshotBytes,
+            detail: outcome.detail
+        )
+        TwoPhoneTestReportWriter.write(report)
+        isRunning = false
+    }
+
+    private func runTwoPhoneSessionAttempt(
+        configuration: TwoPhoneConfiguration
+    ) throws -> TwoPhoneSessionOutcome {
         let session = TwoPhoneSession(
             configuration: configuration,
             romSHA256: loadedROMHash,
@@ -203,45 +357,37 @@ final class EmulatorCore {
             stepFrame: { [weak self] input, createDigest in
                 self?.step(input: input, createDigest: createDigest)
             },
-            status: { [weak self] message in self?.publishStatus(message) }
+            status: { [weak self] message in self?.publishStatus(message) },
+            prepareForSynchronization: { [weak self] in self?.pauseEmulation() },
+            snapshotStateHash: { [weak self] in self?.currentStateHash() ?? 0 },
+            resumeAfterSynchronization: { [weak self] in self?.resumeEmulation() }
         )
 
-        let outcome: TwoPhoneSessionOutcome
-        do {
-            outcome = try session.run()
-        } catch {
-            publishStatus("Session failed: \(error)")
-            outcome = TwoPhoneSessionOutcome(
-                success: false,
-                framesCompleted: 0,
-                finalDigest: nil,
-                checkpointsCompared: 0,
-                snapshotBytes: 0,
-                detail: String(describing: error)
-            )
+        twoPhoneSessionLock.lock()
+        activeTwoPhoneSession = session
+        twoPhoneSessionLock.unlock()
+        defer {
+            twoPhoneSessionLock.lock()
+            if activeTwoPhoneSession === session {
+                activeTwoPhoneSession = nil
+            }
+            twoPhoneSessionLock.unlock()
         }
+        return try session.run()
+    }
 
-        if configuration.isAutomatedProof {
-            let elapsed = Date().timeIntervalSince(startedAt)
-            let report = TwoPhoneTestReport(
-                role: configuration.role,
-                success: outcome.success,
-                framesCompleted: outcome.framesCompleted,
-                elapsedSeconds: elapsed,
-                framesPerSecond: elapsed > 0 ? Double(outcome.framesCompleted) / elapsed : 0,
-                romSHA256: loadedROMHash.map { String(format: "%02x", $0) }.joined(),
-                finalDigest: outcome.finalDigest,
-                checkpointsCompared: outcome.checkpointsCompared,
-                snapshotBytes: outcome.snapshotBytes,
-                detail: outcome.detail
-            )
-            TwoPhoneTestReportWriter.write(report)
-        }
-        isRunning = false
+    private func cancelActiveTwoPhoneSession() {
+        twoPhoneSessionLock.lock()
+        let session = activeTwoPhoneSession
+        twoPhoneSessionLock.unlock()
+        session?.cancel()
     }
 
     @discardableResult
     private func step(input: DSInputFrame, createDigest: Bool) -> EmulatorDigest? {
+        emulatorLock.lock()
+        defer { emulatorLock.unlock() }
+
         melonds_set_key_mask(UInt32(input.keyMask))
         if input.touchActive {
             melonds_touch_screen(input.touchX, input.touchY)
@@ -305,6 +451,9 @@ final class EmulatorCore {
     }
 
     private func makeSnapshot() throws -> Data {
+        emulatorLock.lock()
+        defer { emulatorLock.unlock() }
+
         let required = melonds_save_state_to_buffer(nil, 0)
         guard required > 0 else { throw EmulatorCoreError.snapshotCreationFailed }
         var snapshot = Data(count: Int(required))
@@ -317,6 +466,9 @@ final class EmulatorCore {
     }
 
     private func loadSnapshot(_ snapshot: Data) throws {
+        emulatorLock.lock()
+        defer { emulatorLock.unlock() }
+
         let success = snapshot.withUnsafeBytes { bytes -> Bool in
             guard let base = bytes.baseAddress else { return false }
             return melonds_load_state_from_buffer(
@@ -325,6 +477,24 @@ final class EmulatorCore {
             )
         }
         guard success else { throw EmulatorCoreError.snapshotLoadFailed }
+    }
+
+    private func currentStateHash() -> UInt64 {
+        emulatorLock.lock()
+        defer { emulatorLock.unlock() }
+        return melonds_state_hash()
+    }
+
+    private func pauseEmulation() {
+        emulatorLock.lock()
+        melonds_pause()
+        emulatorLock.unlock()
+    }
+
+    private func resumeEmulation() {
+        emulatorLock.lock()
+        melonds_resume()
+        emulatorLock.unlock()
     }
 
     private func publishStatus(_ message: String) {
@@ -340,6 +510,8 @@ final class EmulatorCore {
 
     func shutdown() {
         stopRequested = true
+        twoPhoneReconnectLoop.stop()
+        cancelActiveTwoPhoneSession()
         emuThread = nil
         melonds_deinit()
         isRunning = false
@@ -348,4 +520,3 @@ final class EmulatorCore {
 
 @_silgen_name("platform_set_data_dir")
 func platform_set_data_dir(_ dir: UnsafePointer<CChar>?)
-
