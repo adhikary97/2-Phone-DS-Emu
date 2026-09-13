@@ -1,0 +1,182 @@
+name: DSEmu
+options:
+  bundleIdPrefix: com.dsemu
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""
+
+targets:
+
+  # ─── melonDS Static Library ─────────────────────────────────────────
+  melonDS:
+    type: library.static
+    platform: iOS
+    sources:
+      # Core emulator sources
+      - path: melonDS/src
+        includes:
+          - "*.cpp"
+          - "*.c"
+        excludes:
+          - "GPU_OpenGL.cpp"
+          - "GPU3D_OpenGL.cpp"
+          - "GPU3D_Compute.cpp"
+          - "GPU3D_TexcacheOpenGL.cpp"
+          - "OpenGLSupport.cpp"
+          - "ARMJIT.cpp"
+          - "ARMJIT_Memory.cpp"
+          - "ARMJIT_Global.cpp"
+        compilerFlags:
+          - "-std=c++17"
+          - "-w"
+
+      # ARM64 JIT backend and Dolphin emitter excluded —
+      # JIT disabled on iOS (shm_open for executable memory is blocked)
+
+      # FatFS
+      - path: melonDS/src/fatfs
+        includes:
+          - "*.c"
+        compilerFlags:
+          - "-w"
+
+      # Vendor: SHA1
+      - path: melonDS/src/sha1
+        includes:
+          - "*.c"
+        compilerFlags:
+          - "-w"
+
+      # Vendor: AES
+      - path: melonDS/src/tiny-AES-c
+        includes:
+          - "*.c"
+        compilerFlags:
+          - "-w"
+
+      # Vendor: xxHash
+      - path: melonDS/src/xxhash
+        includes:
+          - "*.c"
+        compilerFlags:
+          - "-w"
+
+      # Network excluded entirely (not needed for basic DS emulation)
+      # LAN/Netplay require enet, PCap/Slirp require their libs
+
+      # Teakra (DSP emulation for DSi audio)
+      - path: melonDS/src/teakra/src
+        includes:
+          - "*.cpp"
+        excludes:
+          - "test_generator.cpp"
+          - "teakra_c.cpp"
+          - "disassembler_c.cpp"
+        compilerFlags:
+          - "-std=c++17"
+          - "-w"
+
+      # GDB stub excluded entirely
+      # ARMJIT_x64 excluded entirely (wrong arch)
+      # frontend excluded entirely
+
+    settings:
+      base:
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/melonDS/src"
+          - "$(SRCROOT)/melonDS/src/fatfs"
+          - "$(SRCROOT)/melonDS/src/dolphin"
+          - "$(SRCROOT)/melonDS/src/teakra/include"
+          - "$(SRCROOT)/melonDS/src/net"
+        GCC_PREPROCESSOR_DEFINITIONS:
+          - "MELONDS_VERSION=\"1.0-ios\""
+        CLANG_CXX_LANGUAGE_STANDARD: "c++17"
+        GCC_WARN_INHIBIT_ALL_WARNINGS: YES
+
+  # ─── DSEmu iOS App ─────────────────────────────────────────────────
+  DSEmu:
+    type: application
+    platform: iOS
+    sources:
+      - path: DSEmu
+        includes:
+          - "**/*.swift"
+          - "**/*.h"
+          - "**/*.cpp"
+    dependencies:
+      - target: melonDS
+    settings:
+      base:
+        INFOPLIST_FILE: DSEmu/Info.plist
+        CODE_SIGN_ENTITLEMENTS: DSEmu/DSEmu.entitlements
+        SWIFT_OBJC_BRIDGING_HEADER: "DSEmu/DSEmu-Bridging-Header.h"
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/melonDS/src"
+          - "$(SRCROOT)/melonDS/src/fatfs"
+          - "$(SRCROOT)/melonDS/src/dolphin"
+          - "$(SRCROOT)/melonDS/src/teakra/include"
+          - "$(SRCROOT)/melonDS/src/net"
+        GCC_PREPROCESSOR_DEFINITIONS:
+          - "MELONDS_VERSION=\"1.0-ios\""
+        CLANG_CXX_LANGUAGE_STANDARD: "c++17"
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dsemu.twophone"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+        SUPPORTS_MACCATALYST: NO
+    info:
+      path: DSEmu/Info.plist
+      properties:
+        CFBundleDisplayName: "TwoPhone DS"
+        CFBundleName: "TwoPhoneDS"
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: "Phone Display"
+                UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).PhoneSceneDelegate"
+            UIWindowSceneSessionRoleExternalDisplayNonInteractive:
+              - UISceneConfigurationName: "External Display"
+                UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).ExternalDisplaySceneDelegate"
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: "Nintendo DS ROM"
+            LSHandlerRank: "Default"
+            LSItemContentTypes:
+              - "com.dsemu.nds-rom"
+        UTImportedTypeDeclarations:
+          - UTTypeConformsTo:
+              - "public.data"
+            UTTypeIdentifier: "com.dsemu.nds-rom"
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - "nds"
+        NSLocalNetworkUsageDescription: "Connects the controller and top-display phones for synchronized Nintendo DS emulation."
+        NSBonjourServices:
+          - "_twophonedsemu._tcp"
+    entitlements:
+      path: DSEmu/DSEmu.entitlements
+      properties:
+        com.apple.developer.kernel.increased-memory-limit: true
+
+  DSEmuTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: DSEmuTests
+    dependencies:
+      - target: DSEmu
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: "com.dsemu.twophone.tests"
+        GENERATE_INFOPLIST_FILE: YES

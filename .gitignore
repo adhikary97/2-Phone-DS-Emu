@@ -1,0 +1,10 @@
+.DS_Store
+build/
+.build/
+.swiftpm/
+**/xcuserdata/
+*.nds
+*.sav
+*.mst
+artifacts/*
+!artifacts/README.md
