@@ -1,77 +1,120 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="background" x1="116" y1="76" x2="908" y2="948" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#182B5D"/>
-      <stop offset="0.52" stop-color="#3C246B"/>
-      <stop offset="1" stop-color="#15142E"/>
+    <linearGradient id="background" x1="82" y1="52" x2="930" y2="972" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#071B46"/>
+      <stop offset="0.5" stop-color="#302064"/>
+      <stop offset="1" stop-color="#160D32"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(525 460) rotate(90) scale(520)" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7149C6" stop-opacity="0.74"/>
-      <stop offset="1" stop-color="#7149C6" stop-opacity="0"/>
+    <radialGradient id="aura" cx="0" cy="0" r="1" gradientTransform="translate(512 490) rotate(90) scale(522)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6D46D8" stop-opacity="0.62"/>
+      <stop offset="0.58" stop-color="#4D2B9D" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#071B46" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="topScreen" x1="250" y1="300" x2="480" y2="570" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#A9FAFF"/>
-      <stop offset="0.48" stop-color="#50D7F2"/>
-      <stop offset="1" stop-color="#3593DD"/>
+    <linearGradient id="metal" x1="186" y1="128" x2="842" y2="904" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFF"/>
+      <stop offset="0.38" stop-color="#CAD4EE"/>
+      <stop offset="0.7" stop-color="#94A5CB"/>
+      <stop offset="1" stop-color="#E0E7F8"/>
     </linearGradient>
-    <linearGradient id="bottomScreen" x1="546" y1="426" x2="794" y2="690" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFD6F6"/>
-      <stop offset="0.45" stop-color="#F07AC3"/>
-      <stop offset="1" stop-color="#B94DCC"/>
+    <linearGradient id="bezel" x1="210" y1="158" x2="790" y2="876" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#242A47"/>
+      <stop offset="1" stop-color="#101328"/>
     </linearGradient>
-    <linearGradient id="shell" x1="260" y1="214" x2="714" y2="835" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F7F8FF"/>
-      <stop offset="0.55" stop-color="#D9DEF1"/>
-      <stop offset="1" stop-color="#B8C2DC"/>
+    <linearGradient id="topScreen" x1="202" y1="178" x2="824" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#45E7F3"/>
+      <stop offset="0.42" stop-color="#348CDC"/>
+      <stop offset="0.78" stop-color="#7555E6"/>
+      <stop offset="1" stop-color="#D364DF"/>
     </linearGradient>
-    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="28" stdDeviation="26" flood-color="#070817" flood-opacity="0.5"/>
+    <linearGradient id="touchScreen" x1="335" y1="635" x2="699" y2="835" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF75C6"/>
+      <stop offset="0.52" stop-color="#B451DC"/>
+      <stop offset="1" stop-color="#536CE9"/>
+    </linearGradient>
+    <linearGradient id="hinge" x1="454" y1="460" x2="572" y2="558" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFF"/>
+      <stop offset="1" stop-color="#B3C0DE"/>
+    </linearGradient>
+    <filter id="deviceShadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#050613" flood-opacity="0.62"/>
     </filter>
-    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#161A36" flood-opacity="0.38"/>
+    <filter id="controlShadow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#07091C" flood-opacity="0.7"/>
+    </filter>
+    <filter id="hingeShadow" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#08091E" flood-opacity="0.55"/>
     </filter>
   </defs>
 
   <rect width="1024" height="1024" fill="url(#background)"/>
-  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <rect width="1024" height="1024" fill="url(#aura)"/>
+  <path d="M-40 798L340 1024H-40V798Z" fill="#31BFE1" opacity="0.08"/>
+  <path d="M1064 154L728 0H1064V154Z" fill="#ED6DD0" opacity="0.09"/>
 
-  <g opacity="0.22" fill="none" stroke="#BEEBFF" stroke-width="18" stroke-linecap="round">
-    <path d="M428 175C485 122 573 120 631 172"/>
-    <path d="M467 215C503 184 555 184 591 214"/>
-  </g>
+  <!-- Top-display phone: the upper half of the open handheld. -->
+  <g transform="rotate(-2.5 512 294)" filter="url(#deviceShadow)">
+    <rect x="102" y="112" width="820" height="356" rx="94" fill="url(#metal)"/>
+    <rect x="122" y="132" width="780" height="316" rx="77" fill="url(#bezel)"/>
+    <rect x="190" y="164" width="644" height="252" rx="40" fill="url(#topScreen)"/>
 
-  <g transform="rotate(-8 351 482)" filter="url(#shadow)">
-    <rect x="176" y="202" width="350" height="592" rx="80" fill="url(#shell)"/>
-    <rect x="194" y="220" width="314" height="556" rx="64" fill="#20243C"/>
-    <rect x="224" y="292" width="254" height="334" rx="32" fill="url(#topScreen)"/>
-    <path d="M246 318H456V355L246 462Z" fill="#FFFFFF" opacity="0.18"/>
-    <rect x="291" y="252" width="120" height="14" rx="7" fill="#7F89A6"/>
-    <circle cx="267" cy="259" r="7" fill="#8B95B1"/>
-    <circle cx="351" cy="706" r="25" fill="#343952" stroke="#7E87A0" stroke-width="6"/>
-  </g>
+    <path d="M213 187H811V224L213 349Z" fill="#FFFFFF" opacity="0.13"/>
+    <path d="M217 378L390 221L531 329L681 190L809 304V393H217V378Z" fill="#071A47" opacity="0.17"/>
+    <circle cx="316" cy="265" r="42" fill="#B8FAFF" opacity="0.14"/>
+    <circle cx="708" cy="309" r="72" fill="#FFD2F2" opacity="0.12"/>
 
-  <g transform="rotate(8 671 556)" filter="url(#shadow)">
-    <rect x="492" y="258" width="358" height="594" rx="82" fill="url(#shell)"/>
-    <rect x="510" y="276" width="322" height="558" rx="66" fill="#20243C"/>
-    <rect x="542" y="340" width="258" height="282" rx="32" fill="url(#bottomScreen)"/>
-    <path d="M568 365H776V405L568 510Z" fill="#FFFFFF" opacity="0.2"/>
-
-    <g transform="translate(567 664)" fill="#BBC5DD" filter="url(#softShadow)">
-      <rect x="34" y="0" width="30" height="98" rx="9"/>
-      <rect x="0" y="34" width="98" height="30" rx="9"/>
+    <g fill="#697592">
+      <circle cx="153" cy="225" r="7"/><circle cx="153" cy="251" r="7"/><circle cx="153" cy="277" r="7"/><circle cx="153" cy="303" r="7"/><circle cx="153" cy="329" r="7"/>
+      <circle cx="871" cy="225" r="7"/><circle cx="871" cy="251" r="7"/><circle cx="871" cy="277" r="7"/><circle cx="871" cy="303" r="7"/><circle cx="871" cy="329" r="7"/>
     </g>
-    <g fill="none" stroke="#BBC5DD" stroke-width="19" filter="url(#softShadow)">
-      <circle cx="755" cy="685" r="17"/>
-      <circle cx="709" cy="731" r="17"/>
-    </g>
-    <rect x="658" y="782" width="42" height="10" rx="5" fill="#7D87A3"/>
+    <rect x="460" y="143" width="104" height="13" rx="6.5" fill="#73809E"/>
+    <circle cx="585" cy="149.5" r="6.5" fill="#3E4967"/>
+    <rect x="92" y="216" width="12" height="72" rx="6" fill="#8392B8"/>
   </g>
 
-  <g filter="url(#softShadow)">
-    <circle cx="512" cy="529" r="70" fill="#F7F8FF"/>
-    <path d="M477 515C494 493 515 484 541 488" fill="none" stroke="#3C77DF" stroke-width="19" stroke-linecap="round"/>
-    <path d="M535 477L557 491L540 512" fill="none" stroke="#3C77DF" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M548 542C531 564 509 573 484 569" fill="none" stroke="#C44DC3" stroke-width="19" stroke-linecap="round"/>
-    <path d="M490 580L468 566L485 545" fill="none" stroke="#C44DC3" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Bottom controller phone: touch display plus DS-style virtual controls. -->
+  <g transform="rotate(2.5 512 730)" filter="url(#deviceShadow)">
+    <rect x="82" y="556" width="860" height="356" rx="96" fill="url(#metal)"/>
+    <rect x="102" y="576" width="820" height="316" rx="78" fill="url(#bezel)"/>
+    <rect x="128" y="602" width="768" height="264" rx="52" fill="#171A32"/>
+
+    <rect x="326" y="628" width="372" height="208" rx="32" fill="url(#touchScreen)"/>
+    <path d="M350 651H674V684L350 775Z" fill="#FFFFFF" opacity="0.14"/>
+    <path d="M355 805L451 697L532 753L610 661L673 730V812H355V805Z" fill="#1B1D63" opacity="0.2"/>
+
+    <g transform="translate(178 653)" fill="#C9D3EC" filter="url(#controlShadow)">
+      <rect x="42" y="0" width="36" height="120" rx="11"/>
+      <rect x="0" y="42" width="120" height="36" rx="11"/>
+      <path d="M49 10L60 0L71 10H49ZM49 110H71L60 120L49 110ZM10 49V71L0 60L10 49ZM110 49L120 60L110 71V49Z" fill="#EEF2FF" opacity="0.72"/>
+    </g>
+
+    <g filter="url(#controlShadow)">
+      <circle cx="786" cy="672" r="31" fill="#C9D3EC"/>
+      <circle cx="842" cy="728" r="31" fill="#C9D3EC"/>
+      <circle cx="730" cy="728" r="31" fill="#C9D3EC"/>
+      <circle cx="786" cy="784" r="31" fill="#C9D3EC"/>
+      <circle cx="786" cy="672" r="11" fill="#677595"/>
+      <circle cx="842" cy="728" r="11" fill="#677595"/>
+      <circle cx="730" cy="728" r="11" fill="#677595"/>
+      <circle cx="786" cy="784" r="11" fill="#677595"/>
+    </g>
+
+    <g fill="#8592AF">
+      <rect x="456" y="850" width="46" height="10" rx="5"/>
+      <rect x="522" y="850" width="46" height="10" rx="5"/>
+    </g>
+    <rect x="930" y="674" width="12" height="76" rx="6" fill="#8392B8"/>
+    <rect x="885" y="682" width="10" height="92" rx="5" fill="#697592"/>
+  </g>
+
+  <!-- A wireless hinge makes the two separate phones read as one open DS. -->
+  <g filter="url(#hingeShadow)">
+    <rect x="188" y="470" width="220" height="52" rx="26" fill="#1B203A" stroke="#AAB8D9" stroke-width="10"/>
+    <rect x="616" y="502" width="220" height="52" rx="26" fill="#1B203A" stroke="#AAB8D9" stroke-width="10"/>
+    <circle cx="512" cy="512" r="64" fill="url(#hinge)"/>
+    <circle cx="512" cy="512" r="49" fill="#202642"/>
+    <path d="M480 502C493 486 510 480 529 484" fill="none" stroke="#44D9EF" stroke-width="15" stroke-linecap="round"/>
+    <path d="M526 475L543 487L530 503" fill="none" stroke="#44D9EF" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M544 522C531 538 514 544 495 540" fill="none" stroke="#E260CF" stroke-width="15" stroke-linecap="round"/>
+    <path d="M498 549L481 537L494 521" fill="none" stroke="#E260CF" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>
