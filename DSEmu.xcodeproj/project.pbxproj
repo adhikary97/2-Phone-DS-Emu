@@ -86,6 +86,7 @@
 		C265C00CD06EB2FAEA3FFD53 /* TwoPhoneStatusLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E512FAAE913E6BD40AAE2E54 /* TwoPhoneStatusLabel.swift */; };
 		CA73773E226E085A51325D7A /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8F66CB14BFC33C69BF9C19D /* MetalRenderer.swift */; };
 		CFDAA7CAE7D68C45C313D285 /* disassembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7B16351686308688D527ACB1 /* disassembler.cpp */; settings = {COMPILER_FLAGS = "-std=c++17 -w"; }; };
+		D1F340EDC79153DC3C97B10F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8ABFFD20C1B820830436BF44 /* Assets.xcassets */; };
 		D45EB009D79A069FFE9F1F4D /* ROMList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 17754D624848137ABA2C5815 /* ROMList.cpp */; settings = {COMPILER_FLAGS = "-std=c++17 -w"; }; };
 		D5C7CCED59F36560041C7D4E /* DSi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 945EFA82195B4D47965501C6 /* DSi.cpp */; settings = {COMPILER_FLAGS = "-std=c++17 -w"; }; };
 		D774AABFC28D9519B4D4DE8A /* DMA_Timings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2940A5144F5D8633A9BB249B /* DMA_Timings.cpp */; settings = {COMPILER_FLAGS = "-std=c++17 -w"; }; };
@@ -169,6 +170,7 @@
 		817966D323237599497CB0C1 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		88FC7682CEC139C6C30E9CA3 /* TwoPhoneProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoPhoneProtocol.swift; sourceTree = "<group>"; };
 		89F3D53A283AE675595ACEAE /* processor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = processor.cpp; sourceTree = "<group>"; };
+		8ABFFD20C1B820830436BF44 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		921C149DF8AADF895ED21857 /* ROMPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROMPickerViewController.swift; sourceTree = "<group>"; };
 		933E025F145606A3C5A62FD7 /* NDS.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NDS.cpp; sourceTree = "<group>"; };
 		945EFA82195B4D47965501C6 /* DSi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DSi.cpp; sourceTree = "<group>"; };
@@ -309,6 +311,7 @@
 			isa = PBXGroup;
 			children = (
 				71E709ADDAABED3CAE1C8C14 /* AppDelegate.swift */,
+				8ABFFD20C1B820830436BF44 /* Assets.xcassets */,
 				1143BC6EAE73C2967A71420B /* DSEmu-Bridging-Header.h */,
 				5A3C135B8A07B6CA1CEAFF11 /* Audio */,
 				F650ADD8C88D17282C1543B9 /* Bridge */,
@@ -498,6 +501,7 @@
 			buildConfigurationList = B119973ACC19AA6660CAB2F6 /* Build configuration list for PBXNativeTarget "DSEmu" */;
 			buildPhases = (
 				29FC367F7F81D9DD6A5A5F41 /* Sources */,
+				1A785064D674D7994BDCB992 /* Resources */,
 				E750E0C0990B0EACD5A676D1 /* Frameworks */,
 			);
 			buildRules = (
@@ -587,6 +591,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1A785064D674D7994BDCB992 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1F340EDC79153DC3C97B10F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		29FC367F7F81D9DD6A5A5F41 /* Sources */ = {

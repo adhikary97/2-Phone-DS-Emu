@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="background" x1="116" y1="76" x2="908" y2="948" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#182B5D"/>
+      <stop offset="0.52" stop-color="#3C246B"/>
+      <stop offset="1" stop-color="#15142E"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(525 460) rotate(90) scale(520)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7149C6" stop-opacity="0.74"/>
+      <stop offset="1" stop-color="#7149C6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="topScreen" x1="250" y1="300" x2="480" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A9FAFF"/>
+      <stop offset="0.48" stop-color="#50D7F2"/>
+      <stop offset="1" stop-color="#3593DD"/>
+    </linearGradient>
+    <linearGradient id="bottomScreen" x1="546" y1="426" x2="794" y2="690" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD6F6"/>
+      <stop offset="0.45" stop-color="#F07AC3"/>
+      <stop offset="1" stop-color="#B94DCC"/>
+    </linearGradient>
+    <linearGradient id="shell" x1="260" y1="214" x2="714" y2="835" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F8FF"/>
+      <stop offset="0.55" stop-color="#D9DEF1"/>
+      <stop offset="1" stop-color="#B8C2DC"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="28" stdDeviation="26" flood-color="#070817" flood-opacity="0.5"/>
+    </filter>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#161A36" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#background)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <g opacity="0.22" fill="none" stroke="#BEEBFF" stroke-width="18" stroke-linecap="round">
+    <path d="M428 175C485 122 573 120 631 172"/>
+    <path d="M467 215C503 184 555 184 591 214"/>
+  </g>
+
+  <g transform="rotate(-8 351 482)" filter="url(#shadow)">
+    <rect x="176" y="202" width="350" height="592" rx="80" fill="url(#shell)"/>
+    <rect x="194" y="220" width="314" height="556" rx="64" fill="#20243C"/>
+    <rect x="224" y="292" width="254" height="334" rx="32" fill="url(#topScreen)"/>
+    <path d="M246 318H456V355L246 462Z" fill="#FFFFFF" opacity="0.18"/>
+    <rect x="291" y="252" width="120" height="14" rx="7" fill="#7F89A6"/>
+    <circle cx="267" cy="259" r="7" fill="#8B95B1"/>
+    <circle cx="351" cy="706" r="25" fill="#343952" stroke="#7E87A0" stroke-width="6"/>
+  </g>
+
+  <g transform="rotate(8 671 556)" filter="url(#shadow)">
+    <rect x="492" y="258" width="358" height="594" rx="82" fill="url(#shell)"/>
+    <rect x="510" y="276" width="322" height="558" rx="66" fill="#20243C"/>
+    <rect x="542" y="340" width="258" height="282" rx="32" fill="url(#bottomScreen)"/>
+    <path d="M568 365H776V405L568 510Z" fill="#FFFFFF" opacity="0.2"/>
+
+    <g transform="translate(567 664)" fill="#BBC5DD" filter="url(#softShadow)">
+      <rect x="34" y="0" width="30" height="98" rx="9"/>
+      <rect x="0" y="34" width="98" height="30" rx="9"/>
+    </g>
+    <g fill="none" stroke="#BBC5DD" stroke-width="19" filter="url(#softShadow)">
+      <circle cx="755" cy="685" r="17"/>
+      <circle cx="709" cy="731" r="17"/>
+    </g>
+    <rect x="658" y="782" width="42" height="10" rx="5" fill="#7D87A3"/>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <circle cx="512" cy="529" r="70" fill="#F7F8FF"/>
+    <path d="M477 515C494 493 515 484 541 488" fill="none" stroke="#3C77DF" stroke-width="19" stroke-linecap="round"/>
+    <path d="M535 477L557 491L540 512" fill="none" stroke="#3C77DF" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M548 542C531 564 509 573 484 569" fill="none" stroke="#C44DC3" stroke-width="19" stroke-linecap="round"/>
+    <path d="M490 580L468 566L485 545" fill="none" stroke="#C44DC3" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

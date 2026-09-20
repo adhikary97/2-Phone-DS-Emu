@@ -108,6 +108,7 @@ targets:
           - "**/*.swift"
           - "**/*.h"
           - "**/*.cpp"
+      - path: DSEmu/Assets.xcassets
     dependencies:
       - target: melonDS
     settings:
